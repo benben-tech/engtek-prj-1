@@ -39,7 +39,7 @@ void ControlButton::handle(void) {
   if (millis() - _samplingTimer >= BUTTON_SAMPLING_RATE_MS) {
     switch (_state) {
     case eButtonReset:
-      if (digitalRead(getPin()) == HIGH) {
+      if (analogRead(getPin()) >= 350) {
         _onClickCallback();
         _state = eButtonStart;
         _actionTimer = millis();
@@ -47,7 +47,7 @@ void ControlButton::handle(void) {
       break;
     case eButtonStart:
       if ((millis() - _actionTimer) < BUTTON_LONG_PRESS_DURATION_MS) {
-        if (digitalRead(getPin()) == LOW) {
+        if (analogRead(getPin()) == 0) {
           _state = eButtonShortPress;
         }
       } else {
@@ -63,7 +63,7 @@ void ControlButton::handle(void) {
       _state = eButtonReTrigger;
       break;
     case eButtonReTrigger:
-      if (digitalRead(getPin()) == LOW) {
+      if (analogRead(getPin()) == 0) {
         _state = eButtonReset;
       }
       break;

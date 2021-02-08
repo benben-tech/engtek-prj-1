@@ -5,12 +5,12 @@
 
 // SoftwareSerial nodeMCU(2,3);
 
-const int8_t PIN_CONTROL_BUTTON=2;
+const int8_t PIN_CONTROL_BUTTON=A5;
 const int8_t PIN_LED=13;
-
+const int8_t PIN_ANALOG=A5;
 int _id = 0;
 bool _ledState = HIGH; 
-
+int _data=0;
 #if DEBUG == 1
   #define DEBUG_PRINT(x) \
   Serial.print(millis()); \
@@ -48,6 +48,8 @@ void setup() {
 
 void loop() {
   controlButton.handle();
+  _data = map(analogRead(PIN_ANALOG),0,1023,0,1023);
+  // DEBUG_PRINT(data);
 }
 
 void onClick(void) {
@@ -62,7 +64,7 @@ void onShortPress(void) {
 
 void onLongPress(void) {
   DEBUG_PRINT("SEND DATA");
-  nodeMCUsend(random(1024),_id);
+  nodeMCUsend(_data,_id);
 }
 
 void nodeMCUsend(int _data, int _id){
