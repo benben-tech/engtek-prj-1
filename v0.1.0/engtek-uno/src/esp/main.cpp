@@ -1,16 +1,21 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-const char* ssid     = "Demo WiFi";  
-const char* password = "1234567890";
+String path = STATION;
+String ip_port = _IP_PORT;
+
+const int8_t PIN_LED = 2;
+
+bool _ledState = HIGH; 
+
+const char* ssid     = "Marinig Hackerspace";  
+const char* password = "Pamantasan@";
 
 void postData(String val,String val2);
 void readSerialFromUno(void);
 String readSerial();
 void Processbuffer(String buffer);
 void connectToWifi(void);
-
-
 
 #if DEBUG == 1
   #define DEBUG_PRINT(x) \
@@ -25,41 +30,49 @@ void connectToWifi(void);
   Serial.println(x);
 #endif
 
-
-
 void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_LED, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);  
+  digitalWrite(PIN_LED, !_ledState);
   WiFi.begin(ssid, password);
+  while(WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  DEBUG_PRINT(WiFi.localIP());
 }
 
 void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(LED_BUILTIN,LOW);
+    digitalWrite(LED_BUILTIN,HIGH);
     static unsigned long wifiTimer = millis();
-    const unsigned int wifiTimerInterval = 15000;
-    /* Retry connection to WiFi every 15 seconds */
+    const unsigned int wifiTimerInterval = 5000;
+    /* Retry connection to WiFi every 5 seconds */
     if (millis() - wifiTimer >= wifiTimerInterval) {
       connectToWifi();
       wifiTimer = millis();
     }
   }else{
-    digitalWrite(LED_BUILTIN,HIGH);
+    digitalWrite(LED_BUILTIN,LOW);
   }
 
+  readSerialFromUno();
 }
-
 
 void postData(String data1,String data2){
   if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
-  
+    WiFiClient client;
     HTTPClient http;    //Declare object of class HTTPClient
 
-    http.begin("http://192.168.137.1:5000/api");      //Specify request destination
+    http.begin(client,ip_port+path);      //Specify request destination
     http.addHeader("Content-Type", "application/json; charset=utf-8");  //Specify content-type header
     // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    int httpCode = http.POST("{ \"valve\":\"" +data1+"\"}");   //Send the request
-    String payload = http.getString();                  //Get the response payload
-    
+        // int httpCode = http.POST("{\"unique\":\"" +data1+"\", \"valve\":\"" +data2+"\"}"); 
+    int httpCode = http.POST("{\"unique\":\"" +data1+"\", \"valve\":\"" +data2+"\"}");   //Send the request
+    // String payload = http.getString(); //Get the response payload
+    DEBUG_PRINT(httpCode);
     http.end();  //Close connection
 
   }
@@ -69,7 +82,6 @@ void postData(String data1,String data2){
 void readSerialFromUno(){
   String buffer = readSerial();
   if (buffer.endsWith("\n")){
-      int len = buffer.length();
       buffer.trim();
       Processbuffer(buffer);
   }
@@ -93,7 +105,7 @@ void Processbuffer(String buffer) {
   String data1, data2, data3, data4;
   
   //buffer.toLowerCase();
-//  Serial.println("Data from MEGA: " + (String) buffer);
+  DEBUG_PRINT("Data from NANO: " + (String) buffer);
   ind1 = buffer.indexOf(',');  //finds location of first ','
   ind2 = buffer.indexOf(',', ind1 + 1);
   ind3 = buffer.indexOf(',', ind2 + 1);
@@ -103,7 +115,8 @@ void Processbuffer(String buffer) {
   data2 = buffer.substring(ind1 + 1, ind2); 
   data3 = buffer.substring(ind2 + 1, ind3); 
   data4 = buffer.substring(ind3 + 1, ind4); 
- 
+  // buffer.substring(ind1 + 1, buffer.length()); 
+  // postData(data1,data2);
   buffer = "";
 }
 

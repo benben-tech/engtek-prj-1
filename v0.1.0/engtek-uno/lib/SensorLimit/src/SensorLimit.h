@@ -1,22 +1,22 @@
-#ifndef CONTROLBUTTON_H
-#define CONTROLBUTTON_H
+#ifndef SENSORLIMIT_H
+#define SENSORLIMIT_H
 
 #include <Arduino.h>
 
 /* Button state enum */
 typedef enum {
-  _eButtonReset,
-  _eButtonStart,
-  _eButtonShortPress,
-  _eButtonLongPress,
-  _eButtonReTrigger
-} _ButtonState_t;
+  eButtonReset,
+  eButtonStart,
+  eButtonShortPress,
+  eButtonLongPress,
+  eButtonReTrigger
+} ButtonState_t;
 
 /**
  * @brief Control Button class
  *
  */
-class ControlButton {
+class SensorLimit {
 private:
   /**
    * @brief Button pin
@@ -40,7 +40,7 @@ private:
    * @brief Button state
    *
    */
-  _ButtonState_t _state = _eButtonReset;
+  ButtonState_t _state = eButtonReset;
 
   /**
    * @brief Pointer for on click event callback
@@ -78,13 +78,13 @@ public:
    *
    * @param pin Button pin
    */
-  ControlButton(int pin);
+  SensorLimit(int pin);
 
   /**
    * @brief Destroy the Control Button object
    *
    */
-  ~ControlButton();
+  ~SensorLimit();
 
   /**
    * @brief Set the button pin
@@ -139,4 +139,4 @@ public:
   void handle(void);
 };
 
-#endif // !CONTROLBUTTON_H
+#endif // !SensorLimit_H
