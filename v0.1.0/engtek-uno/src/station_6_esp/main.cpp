@@ -5,17 +5,14 @@
 // String path = STATION;
 // String ip_port = _IP_PORT;
 String path = "api/station-six/";
-String ip_port = "http://192.168.43.102:8000/";
+String ip_port = "http://192.168.137.1:8000/";
 
 const int8_t PIN_LED = 2;
-
-bool _ledState = HIGH; 
 
 const char* ssid     = "ShutdownValveAsm";  
 const char* password = "engtekprecision";
 
 void postData(String _id,String data1);
-void postDataCamera(String _id,String data1,String data2,String data3);
 void readSerialFromUno(void);
 String readSerial();
 void Processbuffer(String buffer);
@@ -38,9 +35,8 @@ void connectToWifi(void);
 
 void setup() {
   Serial.begin(9600);
-  pinMode(PIN_LED, OUTPUT);
-  pinMode(LED_BUILTIN, OUTPUT);  
-  digitalWrite(PIN_LED, !_ledState);
+  pinMode(PIN_LED, OUTPUT); 
+  digitalWrite(PIN_LED, LOW);
   WiFi.begin(ssid, password);
   while(WiFi.status() != WL_CONNECTED) { 
     delay(500);
@@ -50,9 +46,7 @@ void setup() {
 }
 
 void loop() {
-
   if (WiFi.status() != WL_CONNECTED) {
-    // digitalWrite(LED_BUILTIN,HIGH);
     digitalWrite(PIN_LED,LOW);
     static unsigned long wifiTimer = millis();
     const unsigned int wifiTimerInterval = 5000;
@@ -63,9 +57,7 @@ void loop() {
     }
   }else{
     digitalWrite(PIN_LED,HIGH);
-    // digitalWrite(LED_BUILTIN,LOW);
   }
-
   readSerialFromUno();
 }
 
@@ -77,26 +69,7 @@ void postData(String _id,String data1){
     http.begin(client,ip_port+path);      //Specify request destination
     http.addHeader("Content-Type", "application/json; charset=utf-8");  //Specify content-type header
     // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        // int httpCode = http.POST("{\"unique\":\"" +data1+"\", \"valve\":\"" +data2+"\"}"); 
     int httpCode = http.POST("{\"unique\":\"" +_id+"\", \"data\":\"" +data1+"\"}");   //Send the request
-    // String payload = http.getString(); //Get the response payload
-    DEBUG_PRINT(httpCode);
-    http.end();  //Close connection
-
-  }
-    
-}
-
-void postDataCamera(String _id,String data1,String data2,String data3){
-  if(WiFi.status()== WL_CONNECTED){   //Check WiFi connection status
-    WiFiClient client;
-    HTTPClient http;    //Declare object of class HTTPClient
-
-    http.begin(client,ip_port+path);      //Specify request destination
-    http.addHeader("Content-Type", "application/json; charset=utf-8");  //Specify content-type header
-    // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-        // int httpCode = http.POST("{\"unique\":\"" +data1+"\", \"valve\":\"" +data2+"\"}"); 
-    int httpCode = http.POST("{\"unique\":\"" +_id+"\", \"data_1\":\"" +data1+"\", \"data_2\":\"" +data2+"\", \"data_3\":\"" +data3+"\"}");   //Send the request
     // String payload = http.getString(); //Get the response payload
     DEBUG_PRINT(httpCode);
     http.end();  //Close connection
@@ -129,8 +102,7 @@ String readSerial()
 void Processbuffer(String buffer) {
   int ind1, ind2, ind3, ind4;
   String data1, data2, data3, data4;
-  
-  //buffer.toLowerCase();
+
   DEBUG_PRINT("Data from NANO: " + (String) buffer);
   ind1 = buffer.indexOf(',');  //finds location of first ','
   ind2 = buffer.indexOf(',', ind1 + 1);
@@ -147,7 +119,6 @@ void Processbuffer(String buffer) {
   DEBUG_PRINT("Data3: " + (String) data4);
   // buffer.substring(ind1 + 1, buffer.length()); 
   postData(data1,data2);
-  // postDataCamera(data1,data2,data3,data4);
   buffer = "";
 }
 

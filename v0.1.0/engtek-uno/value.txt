@@ -1,0 +1,13 @@
+station 5
+    idle 1023
+    good 584-586
+
+station 4
+    idle 169-170
+    sira 4volts
+    may proximity pin 5 ng nano
+
+station 6
+    good 564-566
+    idle 1023
+    bad 681-682

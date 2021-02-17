@@ -47,7 +47,7 @@ void ControlButton::handle(void) {
       break;
     case _eButtonStart:
       if ((millis() - _actionTimer) < BUTTON_LONG_PRESS_DURATION_MS) {
-        if (digitalRead(getPin()) == 0) {
+        if (digitalRead(getPin()) == LOW) {
           _state = _eButtonShortPress;
         }
       } else {
@@ -63,7 +63,7 @@ void ControlButton::handle(void) {
       _state = _eButtonReTrigger;
       break;
     case _eButtonReTrigger:
-      if (digitalRead(getPin()) == 0) {
+      if (digitalRead(getPin()) == LOW) {
         _state = _eButtonReset;
       }
       break;

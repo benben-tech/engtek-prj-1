@@ -39,7 +39,7 @@ void SensorLimit::handle(void) {
   if (millis() - _samplingTimer >= BUTTON_SAMPLING_RATE_MS) {
     switch (_state) {
     case eButtonReset:
-      if (analogRead(getPin()) >= SENSOR_LIMIT) {
+      if (analogRead(getPin()) <= SENSOR_LIMIT) {
         _onClickCallback();
         _state = eButtonStart;
         _actionTimer = millis();
@@ -47,7 +47,7 @@ void SensorLimit::handle(void) {
       break;
     case eButtonStart:
       if ((millis() - _actionTimer) < BUTTON_LONG_PRESS_DURATION_MS) {
-        if (analogRead(getPin()) == 0) {
+        if (analogRead(getPin()) >= SENSOR_RESET) {
           _state = eButtonShortPress;
         }
       } else {
@@ -63,7 +63,7 @@ void SensorLimit::handle(void) {
       _state = eButtonReTrigger;
       break;
     case eButtonReTrigger:
-      if (analogRead(getPin()) == 0) {
+      if (analogRead(getPin()) >= SENSOR_RESET) {
         _state = eButtonReset;
       }
       break;
