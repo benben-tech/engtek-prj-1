@@ -54,7 +54,7 @@ void loop() {
 //   controlButton.handle();
   _data = map(analogRead(PIN_ANALOG),0,1023,0,1023);
   DEBUG_PRINT(_data);
-  // Serial.println(digitalRead(PIN_ANALOG));
+  // Serial.println(_data);
 }
 
 void onClick(void) {

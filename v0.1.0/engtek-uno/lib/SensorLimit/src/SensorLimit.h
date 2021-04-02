@@ -2,6 +2,7 @@
 #define SENSORLIMIT_H
 
 #include <Arduino.h>
+#include <Adafruit_ADS1X15.h> // download BusIO (Adafruit)
 
 /* Button state enum */
 typedef enum {
@@ -70,8 +71,9 @@ private:
    * @brief Duration for long press registration
    *
    */
-  const uint32_t BUTTON_LONG_PRESS_DURATION_MS = 3000;
+  const uint32_t BUTTON_LONG_PRESS_DURATION_MS = 750;
 
+Adafruit_ADS1115 ads;  /* Use this for the 16-bit version */
 public:
   /**
    * @brief Construct a new Control Button object

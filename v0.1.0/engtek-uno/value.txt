@@ -11,3 +11,10 @@ station 6
     good 564-566
     idle 1023
     bad 681-682
+
+
+station 2
+    1st p 505 / 
+    2nd 538
+    meron laman 510
+    idle 375

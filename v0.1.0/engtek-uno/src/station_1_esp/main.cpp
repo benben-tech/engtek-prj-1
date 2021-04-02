@@ -2,8 +2,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
-String path = "api/station-one/";
-String ip_port = "http://192.168.137.1:8000/";
+String path = "api/shutdownvalve/station-one/";
+String ip_port = "http://192.168.137.6:8000/";
 
 const int8_t PIN_LED = 2;
 
@@ -71,7 +71,7 @@ void postDataCamera(String _id,String data1,String data2,String data3){
     http.begin(client,ip_port+path);      //Specify request destination
     http.addHeader("Content-Type", "application/json; charset=utf-8");  //Specify content-type header
     // http.addHeader("Content-Type", "application/x-www-form-urlencoded"); 
-    int httpCode = http.POST("{\"unique\":\"" +_id+"\", \"data_1\":\"" +data1+"\", \"data_2\":\"" +data2+"\", \"data_3\":\"" +data3+"\"}");   //Send the request
+    int httpCode = http.POST("{\"valve_id\":\"" +_id+"\", \"data_1\":\"" +data1+"\", \"data_2\":\"" +data2+"\", \"data_3\":\"" +data3+"\"}");   //Send the request
     // String payload = http.getString(); //Get the response payload
     DEBUG_PRINT(httpCode);
     http.end();  //Close connection

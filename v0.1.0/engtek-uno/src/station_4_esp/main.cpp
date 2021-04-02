@@ -4,8 +4,8 @@
 
 // String path = STATION;
 // String ip_port = _IP_PORT;
-String path = "api/station-four/";
-String ip_port = "http://192.168.137.1:8000/";
+String path = "api/shutdownvalve/station-four/";
+String ip_port = "http://192.168.137.6:8000/";
 
 const int8_t PIN_LED = 2;
 
@@ -69,13 +69,15 @@ void postData(String _id,String data1){
     http.begin(client,ip_port+path);      //Specify request destination
     http.addHeader("Content-Type", "application/json; charset=utf-8");  //Specify content-type header
     // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    int httpCode = http.POST("{\"unique\":\"" +_id+"\", \"data\":\"" +data1+"\"}");   //Send the request
+    int httpCode = http.POST("{\"valve_id\":\"" +_id+"\", \"data\":\"" +data1+"\"}");   //Send the request
     // String payload = http.getString(); //Get the response payload
     DEBUG_PRINT(httpCode);
     http.end();  //Close connection
 
   }
-    
+  digitalWrite(PIN_LED,LOW);
+  delay(500);
+  digitalWrite(PIN_LED,HIGH);
 }
 
 void readSerialFromUno(){
@@ -115,6 +117,7 @@ void Processbuffer(String buffer) {
   data4 = buffer.substring(ind3 + 1, ind4); 
   DEBUG_PRINT("id: " + (String)data1);
   DEBUG_PRINT("Data1: " + (String) data2);
+  
   DEBUG_PRINT("Data2: " + (String) data3);
   DEBUG_PRINT("Data3: " + (String) data4);
   // buffer.substring(ind1 + 1, buffer.length()); 
