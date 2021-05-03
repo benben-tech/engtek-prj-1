@@ -18,3 +18,9 @@ station 2
     2nd 538
     meron laman 510
     idle 375
+
+
+
+
+    1V walang butas at idle
+    5.2V may butas

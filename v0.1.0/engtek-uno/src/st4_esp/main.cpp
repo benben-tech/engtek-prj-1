@@ -8,16 +8,12 @@
 #include <ControlButton.h>
 #include <Adafruit_ADS1X15.h> // download BusIO (Adafruit)
 Adafruit_ADS1115 ads2;  /* Use this for the 16-bit version */
-#define PROXIMITY D6
-ControlButton controlButton(PROXIMITY);
 
-#ifndef STASSID
-#define STASSID "AREA51"
-#define STAPSK  "ppoiiuYY778777"
-#endif
+const int8_t PROXIMITY=12;
+// ControlButton controlButton(PROXIMITY);
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
+const char* ssid = "ShutdownValveAsm";
+const char* password = "engtekprecision";
 
 // Set your Static IP address
 IPAddress local_IP(192, 168, 137, 54);
@@ -29,8 +25,10 @@ IPAddress subnet(255, 255, 255, 0);
 String path = "api/shutdownvalve/station-four/";
 String ip_port = "http://192.168.137.6:8000/";
 
-#define PIN_LED D5
-
+// #define PIN_LED D5
+// #define sensor  D7 // sensor discrete value Good =HIGH, No good = LOW
+const int8_t sensor=13;
+const int8_t PIN_LED=14;
 String _latestID;
 HTTPClient http;
 int httpCode;
@@ -42,7 +40,7 @@ bool ready = true;
 
 String _id,_status;
 
-int16_t _analogRead=0;
+unsigned long _analogRead=0;
 
 void postData(unsigned long valve_id,unsigned int _analogread);
 void connectToWifi(void);
@@ -78,6 +76,7 @@ void setup() {
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, LOW);
   pinMode(PROXIMITY, INPUT);
+  pinMode(sensor, INPUT);
   if (!WiFi.config(local_IP, gateway, subnet)) {
     // Serial.println("STA Failed to configure");
   }
@@ -89,13 +88,14 @@ void setup() {
   }
   OTA();
   ads2.begin();
-  controlButton.setOnClickCallback(onClick);
-  controlButton.setOnLongPressCallback(onLongPress);
-  controlButton.begin();
+  // controlButton.setOnClickCallback(onClick);
+  // controlButton.setOnLongPressCallback(onLongPress);
+  // controlButton.begin();
 }
 
 void loop() {
   ArduinoOTA.handle();
+
   if (WiFi.status() != WL_CONNECTED) {
     digitalWrite(PIN_LED,LOW);
     static unsigned long wifiTimer = millis();
@@ -109,45 +109,81 @@ void loop() {
     digitalWrite(PIN_LED,HIGH);
   }
 
-
- if(Serial.available() && (ready == true)){
+  if(Serial.available() && (ready == true)){
+    // digitalWrite(PIN_LED,!digitalRead(PIN_LED));
     if(id == 0){
       // do nothing
     }
     else if(id>0){
-      // send data to station5 (dummy)
-      Serial.println(String(_id) +","+String(_status)); // send data to station5(dummy)
+      // send data to station4 
+     Serial.println(String(_id) +","+String(_status)); // send data to station3
     }
- readSerialFromStation3();
-  if(status<0){ // if -1
-    //send data to web
-    //sendtoweb(id,""); send null value bcoz No Good
-    postData(id,0);
+    else if(id<0){
+      Serial.println("-1,2"); // send data to station4(dummy)
+    }
+  readSerialFromStation3();
+  if(status == -1){ // if -1
+    //do nothing
     ready = true;
   }
   else{
     ready = false;
   }
  }
- else if((status > 0) && (ready == false)){
-  // read analog data from station2 use debounce
-  // after reading data send to webserver
-  // sendtoweb(id,data);
+//  if((status == 1) && (ready == false)){
+//     // controlButton.handle();
+//     // _analogRead = ads2.readADC_SingleEnded(2);
+      
+//   if(digitalRead(PROXIMITY)==0){
+//     postData(id,_analogRead);
+//     ready = true;
+//   }
+//  }
 
-  // if(digitalRead(PROXIMITY) == 0){
-  //   // read analog data here
-  //   // after reading data send to webserver
-  //   // sendtoweb(id,data);
-    
-  //   // if analogValue in station4 have leaked
-  //   // make data1 = -1;
-  //   controlButton.handle();
-  //   _analogRead = ads2.readADC_SingleEnded(2);
-  //   // if(leaked){
-  //   //   data1 = -1;
-  //   // }
-  // }
-   ready = true;
+  if((status == 1) && (ready == false)){
+    if(digitalRead(PROXIMITY) == 0){
+      _analogRead = 0;
+      delay(1500); // debounce delay
+      if(digitalRead(PROXIMITY) == 0){
+      delay(1500); 
+      int sensorJudgement = digitalRead(sensor);
+      if(sensorJudgement == HIGH){ // Good
+        // read analog data
+        // after reading data send to webserver
+        // sendtoweb(id,data);
+        // for (int i = 0; i < 5; i++) {
+        //     _analogRead += ads2.readADC_SingleEnded(2);
+        //     delay(10);
+        // }
+        // _analogRead = _analogRead/5;
+        _analogRead = ads2.readADC_SingleEnded(2);
+        delay(50);
+        postData(id,_analogRead); // sendtoweb(id,data);
+        ready = true;
+      }
+      else if(sensorJudgement == LOW){ // NG
+        // read analog data
+        // after reading data send to webserver
+        // sendtoweb(id,data);
+        // for (int i = 0; i < 5; i++) {
+        //     _analogRead += ads2.readADC_SingleEnded(2);
+        //     delay(10);
+        // }
+        // _analogRead = _analogRead/5;
+        _analogRead = ads2.readADC_SingleEnded(2);
+        delay(50);
+        postData(id,_analogRead); // sendtoweb(id,data);
+        status = -1; // NG flag
+        ready = true;
+      }
+    }
+  }
+ }
+
+
+ if((status == 2) && (ready == false)){
+  //do nothing
+  ready = true;
  }
 
 }

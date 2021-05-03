@@ -70,7 +70,7 @@ private:
    * @brief Duration for long press registration
    *
    */
-  const uint32_t BUTTON_LONG_PRESS_DURATION_MS = 4500;
+  const uint32_t BUTTON_LONG_PRESS_DURATION_MS = 1500;
 
 public:
   /**

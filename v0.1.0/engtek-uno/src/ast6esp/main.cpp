@@ -22,8 +22,9 @@ IPAddress subnet(255, 255, 255, 0);
 String path = "api/shutdownvalve/station-six/";
 String ip_port = "http://192.168.137.6:8000/";
 
-#define PIN_LED D5
-
+const int8_t sensor1=16;
+const int8_t sensor=12;
+const int8_t PIN_LED=14;
 String _latestID;
 HTTPClient http;
 int httpCode;
@@ -35,12 +36,12 @@ bool ready = true;
 
 String _id,_status;
 
-int16_t _analogRead=0;
+unsigned long _analogRead=0;
 bool readOK = false;
 
-const int8_t PIN_CONTROL_BUTTON=2;
+// const int8_t PIN_CONTROL_BUTTON=2;
 
-SensorLimit sensorLimit(PIN_CONTROL_BUTTON);
+// SensorLimit sensorLimit(PIN_CONTROL_BUTTON);
 
 void postData(unsigned long valve_id,unsigned int _analogread);
 void connectToWifi(void);
@@ -53,9 +54,9 @@ void OTA(void);
 
 void getLatestID(void);
 
-void onClick(void);
-void onShortPress(void);
-void onLongPress(void);
+// void onClick(void);
+// void onShortPress(void);
+// void onLongPress(void);
 
 #if DEBUG == 1
   #define DEBUG_PRINT(x) \
@@ -75,6 +76,8 @@ void onLongPress(void);
 void setup() {
   Serial.begin(9600);
   pinMode(PIN_LED, OUTPUT);
+  pinMode(sensor1, INPUT);
+  pinMode(sensor, INPUT);
   digitalWrite(PIN_LED, LOW);
   if (!WiFi.config(local_IP, gateway, subnet)) {
     // Serial.println("STA Failed to configure");
@@ -87,9 +90,10 @@ void setup() {
   }
   OTA();
   ads2.begin();
-  sensorLimit.setOnClickCallback(onClick);
-  sensorLimit.setOnLongPressCallback(onLongPress);
-  sensorLimit.begin();
+  // sensorLimit.setOnClickCallback(onClick);
+  // sensorLimit.setOnShortPressCallback(onShortPress);
+  // sensorLimit.setOnLongPressCallback(onLongPress);
+  // sensorLimit.begin();
 }
 
 void loop() {
@@ -107,51 +111,84 @@ void loop() {
     digitalWrite(PIN_LED,HIGH);
   }
 
-
  if(Serial.available() && (ready == true)){
     if(id == 0){
       // do nothing
     }
     else if(id>0){
-      // send data to station3 (dummy)
-      Serial.println(String(_id) +","+String(_status)); // send data to station3(dummy)
+  // do nothing
+   Serial.println(String(_id) +","+String(_status)); // send data to station3
     }
- readSerialFromStation5();
-  if(status<0){ // if -1
+    else if(id<0){
+  // do nothing
+  //  Serial.println("-1,2"); // send data to station
+    }
+readSerialFromStation5();
+  if(status == -1){ // if -1
     //send data to web
     //sendtoweb(id,""); send null value bcoz No Good
-    postData(id,0);
     ready = true;
   }
   else{
     ready = false;
   }
  }
- else if((status > 0) && (ready == false)){
-  // read analog data from station2 use debounce
-  // after reading data send to webserver
-  // sendtoweb(id,data);
-  sensorLimit.handle();
-  _analogRead = ads2.readADC_SingleEnded(2);
 
-  // if analogValue in station2 is not in range (minimum limit and maximum limit)
-  // make status = -1;
-//   if(_analogRead){
-//     status = -1;
-//   }
-  // ready = true;
+  if((status == 1) && (ready == false)){
+  _analogRead=0;
+  if(digitalRead(sensor1) == LOW){ // active LOW
+    delay(1500);    // debounce delay
+    if(digitalRead(sensor1) == LOW){
+    delay(1000);
+    int sensorJudgement = digitalRead(sensor);
+    if(digitalRead(sensor) == LOW){ // Good
+      // read analog data get the midpoint (average)
+      // after reading data send to webserver
+      // sendtoweb(id,data);
+      for (int i = 0; i < 5; i++) {
+          _analogRead += ads2.readADC_SingleEnded(2);
+          delay(10);
+      }
+      _analogRead = _analogRead/5;
+      postData(id,_analogRead); // sendtoweb(id,data);
+      ready = true;
+    }
+    else if(digitalRead(sensor) == HIGH){ // NG
+      // read analog data get the midpoint (average)
+      // after reading data send to webserver
+      // sendtoweb(id,data);
+
+      for (int i = 0; i < 5; i++) {
+          _analogRead += ads2.readADC_SingleEnded(2);
+          delay(10);
+      }
+      _analogRead = _analogRead/5;
+      postData(id,_analogRead); // sendtoweb(id,data);
+      status = -1; // flag for NG
+      ready = true;
+    }
+  }
+  }
+ }
+
+ if((status == 2) && (ready == false)){
+  //do nothing
+  ready = true;
  }
 }
 
-void onClick(void) {
-  DEBUG_PRINT("DETECT");
-}
+// void onClick(void) {
+//   ready = false;
+// }
+// void onShortPress(void) {
+//   ready = false;
+// }
 
-void onLongPress(void) {
-  DEBUG_PRINT("SEND DATA");
-  postData(id,_analogRead); // sendtoweb(id,data);
-  ready = true;
-}
+// void onLongPress(void) {
+//   DEBUG_PRINT("SEND DATA");
+//   postData(id,_analogRead); // sendtoweb(id,data);
+//   ready = true;
+// }
 
 void readSerialFromStation5(){
   String buffer = readSerial();
@@ -211,34 +248,6 @@ void connectToWifi(){
   WiFi.begin(ssid, password);
 }
 
-// void getLatestID(){
-//   if (WiFi.status() == WL_CONNECTED) {
-
-//     while(httpCode!=200){
-//         http.begin("http://192.168.137.6:8000/api/shutdownvalve/station-five/");
-//         httpCode = http.GET(); 
-//         if (httpCode > 0) {
-//           StaticJsonDocument<128> doc;
-
-//           DeserializationError error = deserializeJson(doc, http.getString());
-
-//           if (error) {
-//             DEBUG_PRINT("deserializeJson() failed: ");
-//             return;
-//           }
-          
-//           JsonObject root_0 = doc[0];
-//           String root_0_valve_id = root_0["valve_id"]; // "25"
-//           // String root_0_valve_id = doc[0]["valve_id"];
-//           _latestID=root_0_valve_id;
-//           DEBUG_PRINT("Data2: " + root_0_valve_id);
-//           http.end();   //Close connection  
-//         }
-//     }                                                 
-//     DEBUG_PRINT(httpCode);
-//   }
-// }
-
 void OTA(void){
   ArduinoOTA.onStart([]() {
     String type;
@@ -272,7 +281,4 @@ void OTA(void){
     }
   });
   ArduinoOTA.begin();
-  // Serial.println("Ready");
-  // Serial.print("IP address: ");
-  // Serial.println(WiFi.localIP());
 }

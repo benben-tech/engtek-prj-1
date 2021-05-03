@@ -28,7 +28,7 @@ String ip_port = "http://192.168.137.6:8000/";
 #define PIN_LED D5
 #define PROXIMITY D6
 
-String _latestID;
+String _maxQty;
 
 HTTPClient http;
 int httpCode;
@@ -36,6 +36,9 @@ int httpCode;
 unsigned long id = 0;
 
 String data1="0", data2, data3, data4;
+
+bool checkMaxQty = true;
+bool flagResetID = true;
 
 void postDataCamera(unsigned long valve_id,String data1,String data2,String data3,String data4);
 void connectToWifi(void);
@@ -47,7 +50,7 @@ void serial_flush(void);
 
 void OTA(void);
 
-void getLatestID(void);
+void getMaxQty(void);
 
 #if DEBUG == 1
   #define DEBUG_PRINT(x) \
@@ -79,11 +82,15 @@ void setup() {
     ESP.restart();
   }
   OTA();
-  // getLatestID();
-  // delay(3000);
 }
 
 void loop() {
+
+  // if(checkMaxQty&&flagResetID){
+  //   getMaxQty();
+  //   checkMaxQty=false
+  // }
+
   ArduinoOTA.handle();
   if (WiFi.status() != WL_CONNECTED) {
     digitalWrite(PIN_LED,LOW);
@@ -102,6 +109,11 @@ void loop() {
     readSerialFromCamera();
   }
   else if((digitalRead(PROXIMITY)== 1) && (data1 != "0")){
+    
+    if(id==0){
+      getMaxQty();
+      delay(250);
+    }
     id++; // increment ID
     postDataCamera(id,data1,data2,data3,data4); // Send id,data1,data2,data3,data4 to web
     Serial.println(String(id)+","+data1); // data send to next station (station2)
@@ -109,6 +121,10 @@ void loop() {
     data2="";
     data3="";
     data4="";
+
+    if(id==_maxQty.toInt()){
+      id=0;
+    }
   }
   else if((digitalRead(PROXIMITY)== 1) && (data1 == "0") && (Serial.available())){
       serial_flush(); 
@@ -130,7 +146,6 @@ void postDataCamera(unsigned long valve_id,String data1,String data2,String data
     http.end();  //Close connection
 
   }
-    
 }
 
 void readSerialFromCamera(){
@@ -172,41 +187,11 @@ void Processbuffer(String buffer) {
   DEBUG_PRINT("Data3: " + (String) data3);
   DEBUG_PRINT("Data4: " + (String) data4);
   buffer = "";
-  // id++; // increment ID
-  // Serial.println(String(id)+","+data1); // data send to next station (station2)
 }
 
 void connectToWifi(){
   WiFi.disconnect();
   WiFi.begin(ssid, password);
-}
-
-void getLatestID(){
-  if (WiFi.status() == WL_CONNECTED) {
-
-    while(httpCode!=200){
-        http.begin("http://192.168.1.2:8000/api/shutdownvalve/station-one/");
-        httpCode = http.GET(); 
-        if (httpCode > 0) {
-          StaticJsonDocument<128> doc;
-
-          DeserializationError error = deserializeJson(doc, http.getString());
-
-          if (error) {
-            DEBUG_PRINT("deserializeJson() failed: ");
-            return;
-          }
-          
-          JsonObject root_0 = doc[0];
-          String root_0_valve_id = root_0["valve_id"]; // "25"
-          // String root_0_valve_id = doc[0]["valve_id"];
-          _latestID=root_0_valve_id;
-          DEBUG_PRINT("Data2: " + root_0_valve_id);
-          http.end();   //Close connection  
-        }
-    }                                                 
-    DEBUG_PRINT(httpCode);
-  }
 }
 
 void serial_flush(void) {
@@ -258,7 +243,30 @@ void OTA(void){
     }
   });
   ArduinoOTA.begin();
-  // Serial.println("Ready");
-  // Serial.print("IP address: ");
-  // Serial.println(WiFi.localIP());
+}
+
+void getMaxQty(){
+  if (WiFi.status() == WL_CONNECTED) {
+
+    while(httpCode!=200){
+        http.begin("http://192.168.1.12:8000/api/shutdownvalve/shutdownvalve_data_max_qty");
+        httpCode = http.GET(); 
+        if (httpCode > 0) {
+          StaticJsonDocument<128> doc;
+
+          DeserializationError error = deserializeJson(doc, http.getString());
+
+          if (error) {
+            DEBUG_PRINT("deserializeJson() failed: ");
+            return;
+          }
+          
+          JsonObject root_0 = doc[0];
+          String root_0_max_qty = root_0["qty"]; // "25"
+          // String root_0_max_qty = doc[0]["valve_id"];
+          _maxQty=root_0_max_qty;
+          http.end();   //Close connection  
+        }
+    }                                                 
+  }
 }

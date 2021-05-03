@@ -5,13 +5,8 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-#ifndef STASSID
-#define STASSID "AREA51"
-#define STAPSK  "ppoiiuYY778777"
-#endif
-
-const char* ssid = STASSID;
-const char* password = STAPSK;
+const char* ssid = "ShutdownValveAsm";
+const char* password = "engtekprecision";
 
 // Set your Static IP address
 IPAddress local_IP(192, 168, 137, 53);
@@ -104,7 +99,7 @@ void loop() {
         ready = false;
     }
     }
-    if((status > 0) && (ready == false)){
+    else if((status > 0) && (ready == false)){
     //do nothing
     ready = true;
     }

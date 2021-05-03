@@ -9,13 +9,8 @@
 #include <Adafruit_ADS1X15.h> // download BusIO (Adafruit)
 Adafruit_ADS1115 ads2;  /* Use this for the 16-bit version */
 
-#ifndef STASSID
-#define STASSID "AREA51"
-#define STAPSK  "ppoiiuYY778777"
-#endif
-
-const char* ssid = STASSID;
-const char* password = STAPSK;
+const char* ssid = "ShutdownValveAsm";
+const char* password = "engtekprecision";
 
 // Set your Static IP address
 IPAddress local_IP(192, 168, 137, 55);
@@ -144,7 +139,7 @@ void loop() {
 //   if(_analogRead){
 //     status = -1;
 //   }
-  ready = true;
+  // ready = true;
  }
 }
 
